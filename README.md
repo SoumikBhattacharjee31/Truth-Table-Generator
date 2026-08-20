@@ -4,7 +4,7 @@ An interactive Angular website for generating complete truth tables from Boolean
 
 The teaching view includes a color-coded parse tree, selectable truth-table rows, step-by-step evaluation, expression statistics, Boolean classification, CSV/clipboard export, and shareable expression URLs.
 
-Once GitHub Pages is enabled, the website will be available at:
+The live website is available at:
 
 **https://soumikbhattacharjee31.github.io/Truth-Table-Generator/**
 
@@ -45,14 +45,9 @@ npm run build:pages
 
 ## GitHub Pages deployment
 
-The workflow in `.github/workflows/deploy-pages.yml` tests, builds, and deploys the application whenever `main` is pushed. Generated `dist` files are deployed as an Actions artifact and are not committed.
+GitHub Pages is enabled with **GitHub Actions** as its publishing source. The workflow in `.github/workflows/deploy-pages.yml` tests, builds, and deploys the application whenever `main` is pushed. It can also be started manually from the repository's **Actions** tab.
 
-After pushing the changes for the first time:
-
-1. Open the repository on GitHub.
-2. Go to **Settings → Pages**.
-3. Under **Build and deployment**, choose **GitHub Actions** as the source.
-4. Run the workflow manually from **Actions**, or push another commit to `main`.
+Generated `dist` files are deployed as an Actions artifact and are not committed.
 
 The production build uses `/Truth-Table-Generator/` as its base path so scripts and styles resolve correctly on the project Pages URL.
 
