@@ -2,6 +2,8 @@
 
 An interactive Angular website for generating complete truth tables from Boolean expressions. The project also retains the original Python and C++ implementations that inspired the web version.
 
+The teaching view includes a color-coded parse tree, selectable truth-table rows, step-by-step evaluation, expression statistics, Boolean classification, CSV/clipboard export, and shareable expression URLs.
+
 Once GitHub Pages is enabled, the website will be available at:
 
 **https://soumikbhattacharjee31.github.io/Truth-Table-Generator/**
@@ -19,6 +21,8 @@ Variables are case-sensitive single letters. Whitespace is optional.
 | `( )`  | grouping    | `A * (B + C)`      |
 
 NOT is evaluated first, AND and XOR share the next precedence level and are evaluated left-to-right, and OR is evaluated last. The website accepts at most 10 distinct variables, producing up to 1,024 rows.
+
+Select any result value to inspect that row in the parse tree. Every node changes color to show its value, and the evaluation panel explains the calculation in post-order. **Copy link** stores the current expression in the URL so the same example can be shared directly.
 
 ## Local development
 

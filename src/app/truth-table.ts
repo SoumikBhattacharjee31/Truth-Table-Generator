@@ -20,8 +20,49 @@ export interface TruthTableRow {
 
 export interface TruthTable {
   expression: string;
+  root: ExpressionNode;
+  normalizedExpression: string;
   variables: string[];
   rows: TruthTableRow[];
+}
+
+export interface TreeNodeView {
+  id: string;
+  label: string;
+  expression: string;
+  kind: ExpressionNode["kind"];
+  x: number;
+  y: number;
+}
+
+export interface TreeEdgeView {
+  from: string;
+  to: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+export interface TreeVisualization {
+  nodes: TreeNodeView[];
+  edges: TreeEdgeView[];
+  width: number;
+  height: number;
+}
+
+export interface EvaluationStep {
+  nodeId: string;
+  expression: string;
+  value: boolean;
+  explanation: string;
+}
+
+export interface ExpressionStatistics {
+  nodeCount: number;
+  operatorCount: number;
+  depth: number;
+  classification: "Tautology" | "Contradiction" | "Contingent";
 }
 
 export class ExpressionParseError extends Error {
@@ -251,7 +292,195 @@ export function generateTruthTable(expression: string): TruthTable {
     rows.push({ values, result: evaluate(parsed.root, assignments) });
   }
 
-  return { expression, variables: parsed.variables, rows };
+  return {
+    expression,
+    root: parsed.root,
+    normalizedExpression: formatExpression(parsed.root),
+    variables: parsed.variables,
+    rows,
+  };
+}
+
+const OPERATOR_NAMES: Record<"+" | "*" | "^", string> = {
+  "+": "OR",
+  "*": "AND",
+  "^": "XOR",
+};
+
+export function formatExpression(node: ExpressionNode): string {
+  if (node.kind === "variable") return node.name;
+  if (node.kind === "not") {
+    const operand = formatExpression(node.operand);
+    return node.operand.kind === "variable" ? `${operand}'` : `(${operand})'`;
+  }
+  return `(${formatExpression(node.left)} ${node.operator} ${formatExpression(node.right)})`;
+}
+
+function getNodeLabel(node: ExpressionNode): string {
+  if (node.kind === "variable") return node.name;
+  if (node.kind === "not") return "NOT";
+  return OPERATOR_NAMES[node.operator];
+}
+
+export function buildTreeVisualization(
+  root: ExpressionNode,
+): TreeVisualization {
+  const nodes: TreeNodeView[] = [];
+  const edges: TreeEdgeView[] = [];
+  const horizontalGap = 112;
+  const verticalGap = 104;
+  const margin = 52;
+  let nextLeaf = 0;
+  let deepestLevel = 0;
+
+  interface PositionedNode {
+    id: string;
+    x: number;
+    y: number;
+  }
+
+  function visit(
+    node: ExpressionNode,
+    id: string,
+    depth: number,
+  ): PositionedNode {
+    deepestLevel = Math.max(deepestLevel, depth);
+    const children: PositionedNode[] = [];
+    if (node.kind === "not") {
+      children.push(visit(node.operand, `${id}-operand`, depth + 1));
+    } else if (node.kind === "binary") {
+      children.push(visit(node.left, `${id}-left`, depth + 1));
+      children.push(visit(node.right, `${id}-right`, depth + 1));
+    }
+
+    const x = children.length
+      ? children.reduce((sum, child) => sum + child.x, 0) / children.length
+      : margin + nextLeaf++ * horizontalGap;
+    const y = margin + depth * verticalGap;
+    nodes.push({
+      id,
+      label: getNodeLabel(node),
+      expression: formatExpression(node),
+      kind: node.kind,
+      x,
+      y,
+    });
+    for (const child of children) {
+      edges.push({
+        from: id,
+        to: child.id,
+        x1: x,
+        y1: y + 25,
+        x2: child.x,
+        y2: child.y - 25,
+      });
+    }
+    return { id, x, y };
+  }
+
+  visit(root, "root", 0);
+  const contentWidth = Math.max(
+    margin * 2,
+    margin * 2 + Math.max(0, nextLeaf - 1) * horizontalGap,
+  );
+  const width = Math.max(560, contentWidth);
+  const horizontalOffset = (width - contentWidth) / 2;
+  return {
+    nodes: nodes.map((node) => ({ ...node, x: node.x + horizontalOffset })),
+    edges: edges.map((edge) => ({
+      ...edge,
+      x1: edge.x1 + horizontalOffset,
+      x2: edge.x2 + horizontalOffset,
+    })),
+    width,
+    height: margin * 2 + deepestLevel * verticalGap,
+  };
+}
+
+export function evaluateWithTrace(
+  root: ExpressionNode,
+  values: ReadonlyMap<string, boolean>,
+): EvaluationStep[] {
+  const steps: EvaluationStep[] = [];
+
+  function visit(node: ExpressionNode, id: string): boolean {
+    if (node.kind === "variable") {
+      const value = values.get(node.name) ?? false;
+      steps.push({
+        nodeId: id,
+        expression: node.name,
+        value,
+        explanation: `${node.name} = ${Number(value)}`,
+      });
+      return value;
+    }
+    if (node.kind === "not") {
+      const operand = visit(node.operand, `${id}-operand`);
+      const value = !operand;
+      steps.push({
+        nodeId: id,
+        expression: formatExpression(node),
+        value,
+        explanation: `NOT ${Number(operand)} → ${Number(value)}`,
+      });
+      return value;
+    }
+
+    const left = visit(node.left, `${id}-left`);
+    const right = visit(node.right, `${id}-right`);
+    const value =
+      node.operator === "+"
+        ? left || right
+        : node.operator === "*"
+          ? left && right
+          : left !== right;
+    steps.push({
+      nodeId: id,
+      expression: formatExpression(node),
+      value,
+      explanation: `${Number(left)} ${OPERATOR_NAMES[node.operator]} ${Number(right)} → ${Number(value)}`,
+    });
+    return value;
+  }
+
+  visit(root, "root");
+  return steps;
+}
+
+export function getExpressionStatistics(
+  table: TruthTable,
+): ExpressionStatistics {
+  function inspect(
+    node: ExpressionNode,
+  ): Omit<ExpressionStatistics, "classification"> {
+    if (node.kind === "variable")
+      return { nodeCount: 1, operatorCount: 0, depth: 1 };
+    if (node.kind === "not") {
+      const child = inspect(node.operand);
+      return {
+        nodeCount: child.nodeCount + 1,
+        operatorCount: child.operatorCount + 1,
+        depth: child.depth + 1,
+      };
+    }
+    const left = inspect(node.left);
+    const right = inspect(node.right);
+    return {
+      nodeCount: left.nodeCount + right.nodeCount + 1,
+      operatorCount: left.operatorCount + right.operatorCount + 1,
+      depth: Math.max(left.depth, right.depth) + 1,
+    };
+  }
+
+  const structure = inspect(table.root);
+  const trueCount = table.rows.filter((row) => row.result).length;
+  const classification =
+    trueCount === table.rows.length
+      ? "Tautology"
+      : trueCount === 0
+        ? "Contradiction"
+        : "Contingent";
+  return { ...structure, classification };
 }
 
 export function tableToTsv(table: TruthTable): string {

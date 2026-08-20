@@ -446,6 +446,307 @@ td span.is-true {
 .result-column {
   border-left: 2px solid var(--line);
 }
+.row-select {
+  margin: -8px;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  color: inherit;
+  background: transparent;
+}
+.row-select:hover,
+.row-select:focus-visible {
+  background: var(--primary-soft);
+}
+.selected-row {
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+  box-shadow: inset 3px 0 var(--primary);
+}
+.explorer-card {
+  grid-column: 1 / -1;
+  padding: 32px;
+}
+.explorer-heading {
+  align-items: center;
+}
+.section-copy {
+  max-width: 640px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.classification {
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+.classification-always {
+  color: var(--success);
+  background: var(--success-soft);
+}
+.classification-never {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 25px;
+}
+.stats-grid div {
+  display: grid;
+  gap: 2px;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-solid) 88%, transparent);
+}
+.stats-grid strong {
+  font-size: 21px;
+}
+.stats-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.normalized-expression {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  overflow: hidden;
+}
+.normalized-expression span {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+.normalized-expression code {
+  overflow: hidden;
+  color: var(--primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.learning-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+.learning-panel {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--surface-solid) 92%, transparent);
+}
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.panel-heading h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.panel-kicker {
+  margin: 0 0 6px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tree-legend {
+  display: flex;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.tree-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tree-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.false-dot {
+  background: var(--muted);
+}
+.true-dot {
+  background: var(--success);
+}
+.tree-scroll {
+  min-height: 260px;
+  margin-top: 10px;
+  overflow: auto;
+}
+.tree-scroll:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: -3px;
+  border-radius: 10px;
+}
+.parse-tree {
+  display: block;
+  max-width: none;
+  margin-inline: auto;
+}
+.tree-edge {
+  stroke: var(--line);
+  stroke-width: 2;
+}
+.tree-node {
+  cursor: pointer;
+  outline: none;
+}
+.tree-node circle {
+  fill: var(--surface-solid);
+  stroke: var(--muted);
+  stroke-width: 2;
+  transition:
+    fill 0.15s,
+    stroke 0.15s,
+    stroke-width 0.15s;
+}
+.tree-node text {
+  fill: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+.tree-node.node-true circle {
+  fill: var(--success-soft);
+  stroke: var(--success);
+}
+.tree-node.node-false circle {
+  fill: color-mix(in srgb, var(--muted) 10%, var(--surface-solid));
+}
+.tree-node:hover circle,
+.tree-node:focus-visible circle,
+.tree-node.node-selected circle {
+  stroke: var(--primary);
+  stroke-width: 4;
+}
+.selected-expression {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.selected-expression span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+.selected-expression code {
+  overflow: hidden;
+  color: var(--primary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selected-expression b,
+.evaluation-list > li > b {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+.is-true-text {
+  color: var(--success) !important;
+  background: var(--success-soft) !important;
+}
+.assignments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 18px;
+}
+.assignments span {
+  padding: 6px 9px;
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--primary-soft);
+  font-size: 11px;
+}
+.assignments code {
+  color: var(--primary);
+  font-weight: 800;
+}
+.evaluation-list {
+  display: grid;
+  max-height: 410px;
+  margin: 16px 0 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.evaluation-list li {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 9px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.evaluation-list li:hover,
+.evaluation-list li.active-step {
+  background: var(--primary-soft);
+}
+.evaluation-list li:last-child {
+  border-bottom: 0;
+}
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  font-size: 10px;
+  font-weight: 800;
+}
+.evaluation-list code {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.evaluation-list p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
 .footer {
   padding-block: 38px;
   color: var(--muted);
@@ -479,6 +780,12 @@ input:focus-visible {
   }
   .results-card {
     grid-column: 1;
+  }
+  .explorer-card {
+    grid-column: 1;
+  }
+  .learning-grid {
+    grid-template-columns: 1fr;
   }
   .guide-card {
     order: 2;
@@ -514,6 +821,13 @@ input:focus-visible {
   .results-heading {
     display: grid;
   }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .normalized-expression {
+    display: grid;
+    gap: 6px;
+  }
   .input-row {
     display: grid;
   }
@@ -526,6 +840,12 @@ input:focus-visible {
   .result-actions button {
     flex: 1;
     padding-inline: 9px;
+  }
+  .result-actions {
+    flex-wrap: wrap;
+  }
+  .result-actions button {
+    min-width: calc(50% - 5px);
   }
   .action-status {
     text-align: left;

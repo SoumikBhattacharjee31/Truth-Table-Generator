@@ -127,6 +127,13 @@
           </p>
         </div>
         <div class="result-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="copyShareLink()"
+          >
+            Copy link
+          </button>
           <button type="button" class="secondary-button" (click)="copyTable()">
             Copy table
           </button>
@@ -157,21 +164,216 @@
           </thead>
           <tbody>
             @for (row of currentTable.rows; track $index) {
-              <tr>
+              <tr [class.selected-row]="$index === selectedRowIndex()">
                 @for (value of row.values; track $index) {
                   <td>
                     <span [class.is-true]="value">{{ value ? 1 : 0 }}</span>
                   </td>
                 }
                 <td class="result-column">
-                  <span [class.is-true]="row.result">{{
-                    row.result ? 1 : 0
-                  }}</span>
+                  <button
+                    type="button"
+                    class="row-select"
+                    [attr.aria-label]="'Inspect row ' + ($index + 1)"
+                    [attr.aria-pressed]="$index === selectedRowIndex()"
+                    (click)="selectRow($index)"
+                  >
+                    <span [class.is-true]="row.result">{{
+                      row.result ? 1 : 0
+                    }}</span>
+                  </button>
                 </td>
               </tr>
             }
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section class="card explorer-card" aria-labelledby="explorer-title">
+      <div class="section-heading explorer-heading">
+        <div>
+          <p class="step">Step 3</p>
+          <h2 id="explorer-title">Explore how it works</h2>
+          <p class="section-copy">
+            Select a result in the table, then follow that row through the parse
+            tree and evaluation steps.
+          </p>
+        </div>
+        @if (statistics(); as stats) {
+          <span
+            class="classification"
+            [class.classification-always]="stats.classification === 'Tautology'"
+            [class.classification-never]="
+              stats.classification === 'Contradiction'
+            "
+            >{{ stats.classification }}</span
+          >
+        }
+      </div>
+
+      @if (statistics(); as stats) {
+        <div class="stats-grid" aria-label="Expression statistics">
+          <div>
+            <strong>{{ currentTable.variables.length }}</strong
+            ><span>Variables</span>
+          </div>
+          <div>
+            <strong>{{ stats.operatorCount }}</strong
+            ><span>Operators</span>
+          </div>
+          <div>
+            <strong>{{ stats.nodeCount }}</strong
+            ><span>Tree nodes</span>
+          </div>
+          <div>
+            <strong>{{ stats.depth }}</strong
+            ><span>Tree depth</span>
+          </div>
+        </div>
+      }
+
+      <div class="normalized-expression">
+        <span>Normalized expression</span>
+        <code>{{ currentTable.normalizedExpression }}</code>
+      </div>
+
+      <div class="learning-grid">
+        <article class="learning-panel tree-panel" aria-labelledby="tree-title">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Structure</p>
+              <h3 id="tree-title">Parse tree</h3>
+            </div>
+            <div class="tree-legend" aria-label="Node value legend">
+              <span><i class="false-dot"></i>0</span>
+              <span><i class="true-dot"></i>1</span>
+            </div>
+          </div>
+
+          @if (tree(); as currentTree) {
+            <div
+              class="tree-scroll"
+              tabindex="0"
+              aria-label="Scrollable parse tree"
+            >
+              <svg
+                class="parse-tree"
+                role="img"
+                aria-labelledby="tree-title tree-description"
+                [attr.viewBox]="
+                  '0 0 ' + currentTree.width + ' ' + currentTree.height
+                "
+                [attr.width]="currentTree.width"
+                [attr.height]="currentTree.height"
+              >
+                <desc id="tree-description">
+                  Parse tree for {{ currentTable.normalizedExpression }}. Node
+                  colors show values for the selected truth-table row.
+                </desc>
+                @for (edge of currentTree.edges; track edge.from + edge.to) {
+                  <line
+                    class="tree-edge"
+                    [attr.x1]="edge.x1"
+                    [attr.y1]="edge.y1"
+                    [attr.x2]="edge.x2"
+                    [attr.y2]="edge.y2"
+                  />
+                }
+                @for (node of currentTree.nodes; track node.id) {
+                  <g
+                    class="tree-node"
+                    role="button"
+                    tabindex="0"
+                    [class.node-true]="nodeValue(node.id) === true"
+                    [class.node-false]="nodeValue(node.id) === false"
+                    [class.node-selected]="selectedNodeId() === node.id"
+                    [attr.transform]="
+                      'translate(' + node.x + ' ' + node.y + ')'
+                    "
+                    [attr.aria-label]="
+                      node.label +
+                      ', expression ' +
+                      node.expression +
+                      ', value ' +
+                      (nodeValue(node.id) ? '1' : '0')
+                    "
+                    (click)="selectedNodeId.set(node.id)"
+                    (keydown.enter)="selectedNodeId.set(node.id)"
+                    (keydown.space)="
+                      selectedNodeId.set(node.id); $event.preventDefault()
+                    "
+                  >
+                    <title>
+                      {{ node.expression }} = {{ nodeValue(node.id) ? 1 : 0 }}
+                    </title>
+                    <circle r="27" />
+                    <text text-anchor="middle" dominant-baseline="central">
+                      {{ node.label }}
+                    </text>
+                  </g>
+                }
+              </svg>
+            </div>
+          }
+
+          @if (selectedNode(); as node) {
+            <div class="selected-expression">
+              <span>Selected subexpression</span>
+              <code>{{ node.expression }}</code>
+              <b [class.is-true-text]="nodeValue(node.id)">{{
+                nodeValue(node.id) ? 1 : 0
+              }}</b>
+            </div>
+          }
+        </article>
+
+        <article
+          class="learning-panel trace-panel"
+          aria-labelledby="trace-title"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">
+                Selected row {{ selectedRowIndex() + 1 }}
+              </p>
+              <h3 id="trace-title">Evaluation steps</h3>
+            </div>
+          </div>
+
+          @if (selectedRow(); as row) {
+            <div class="assignments" aria-label="Variable assignments">
+              @for (
+                variable of currentTable.variables;
+                track variable;
+                let index = $index
+              ) {
+                <span
+                  ><code>{{ variable }}</code> =
+                  <b>{{ row.values[index] ? 1 : 0 }}</b></span
+                >
+              }
+            </div>
+          }
+
+          <ol class="evaluation-list">
+            @for (step of evaluationSteps(); track step.nodeId) {
+              <li
+                [class.active-step]="selectedNodeId() === step.nodeId"
+                (click)="selectedNodeId.set(step.nodeId)"
+              >
+                <span class="step-number">{{ $index + 1 }}</span>
+                <div>
+                  <code>{{ step.expression }}</code>
+                  <p>{{ step.explanation }}</p>
+                </div>
+                <b [class.is-true-text]="step.value">{{
+                  step.value ? 1 : 0
+                }}</b>
+              </li>
+            }
+          </ol>
+        </article>
       </div>
     </section>
   }

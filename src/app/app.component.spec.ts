@@ -5,6 +5,7 @@ import { AppComponent } from "./app.component";
 
 describe("AppComponent", () => {
   beforeEach(async () => {
+    window.history.replaceState(null, "", "/");
     await TestBed.configureTestingModule({
       imports: [AppComponent],
     }).compileComponents();
@@ -65,5 +66,32 @@ describe("AppComponent", () => {
     expect(writeText).toHaveBeenCalledOnce();
     expect(writeText.mock.calls[0][0]).toContain("A\tB\tC\tResult");
     expect(fixture.componentInstance.copyStatus()).toContain("copied");
+  });
+
+  it("selects a row and updates its evaluation", () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.componentInstance.expression.setValue("A + B");
+    fixture.componentInstance.generate();
+    fixture.componentInstance.selectRow(1);
+
+    expect(fixture.componentInstance.selectedRow()?.values).toEqual([
+      false,
+      true,
+    ]);
+    expect(fixture.componentInstance.evaluationSteps().at(-1)?.value).toBe(
+      true,
+    );
+  });
+
+  it("loads and writes shareable expression URLs", () => {
+    window.history.replaceState(null, "", "/?expression=A%2BB");
+    const fixture = TestBed.createComponent(AppComponent);
+    expect(fixture.componentInstance.expression.value).toBe("A+B");
+
+    fixture.componentInstance.expression.setValue("A * B");
+    fixture.componentInstance.generate();
+    expect(new URL(window.location.href).searchParams.get("expression")).toBe(
+      "A * B",
+    );
   });
 });

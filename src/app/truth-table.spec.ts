@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   ExpressionParseError,
+  buildTreeVisualization,
+  evaluateWithTrace,
   generateTruthTable,
+  getExpressionStatistics,
   parseExpression,
   tableToCsv,
   tableToTsv,
@@ -93,5 +96,58 @@ describe("truth-table output", () => {
 
   it("formats CSV downloads", () => {
     expect(tableToCsv(table)).toBe("A,B,Result\n0,0,0\n0,1,1\n1,0,1\n1,1,1");
+  });
+});
+
+describe("expression teaching data", () => {
+  it("builds a centered tree with stable node identifiers", () => {
+    const table = generateTruthTable("A * (B + C')");
+    const tree = buildTreeVisualization(table.root);
+    expect(tree.nodes.map((node) => node.id)).toContain(
+      "root-right-right-operand",
+    );
+    expect(tree.nodes.find((node) => node.id === "root")?.label).toBe("AND");
+    expect(tree.nodes.every((node) => node.x > 0 && node.x < tree.width)).toBe(
+      true,
+    );
+    expect(tree.edges).toHaveLength(tree.nodes.length - 1);
+  });
+
+  it("returns post-order evaluation steps for every tree node", () => {
+    const table = generateTruthTable("A + B'");
+    const steps = evaluateWithTrace(
+      table.root,
+      new Map([
+        ["A", false],
+        ["B", false],
+      ]),
+    );
+    expect(steps.map((step) => step.explanation)).toEqual([
+      "A = 0",
+      "B = 0",
+      "NOT 0 → 1",
+      "0 OR 1 → 1",
+    ]);
+    expect(steps.at(-1)?.nodeId).toBe("root");
+  });
+
+  it.each([
+    ["A + A'", "Tautology"],
+    ["A * A'", "Contradiction"],
+    ["A + B", "Contingent"],
+  ])("classifies %s as %s", (expression, classification) => {
+    expect(
+      getExpressionStatistics(generateTruthTable(expression)).classification,
+    ).toBe(classification);
+  });
+
+  it("reports normalized form and structural complexity", () => {
+    const table = generateTruthTable("A*(B+C')");
+    expect(table.normalizedExpression).toBe("(A * (B + C'))");
+    expect(getExpressionStatistics(table)).toMatchObject({
+      nodeCount: 6,
+      operatorCount: 3,
+      depth: 4,
+    });
   });
 });
