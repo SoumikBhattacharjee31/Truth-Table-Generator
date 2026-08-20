@@ -1,0 +1,184 @@
+<header class="hero">
+  <nav class="nav container" aria-label="Primary navigation">
+    <a class="brand" href="." aria-label="Truth Table Generator home">
+      <span class="brand-mark" aria-hidden="true">TT</span>
+      <span>Truth Table Generator</span>
+    </a>
+    <a
+      class="github-link"
+      href="https://github.com/SoumikBhattacharjee31/Truth-Table-Generator"
+      target="_blank"
+      rel="noreferrer"
+    >
+      View source <span aria-hidden="true">↗</span>
+    </a>
+  </nav>
+
+  <div class="hero-content container">
+    <p class="eyebrow">Boolean logic, made visible</p>
+    <h1>Turn an expression into a complete truth table.</h1>
+    <p class="hero-copy">
+      Enter a Boolean expression using familiar algebraic operators. The table
+      is generated entirely in your browser.
+    </p>
+  </div>
+</header>
+
+<main class="container main-grid">
+  <section class="card generator-card" aria-labelledby="generator-title">
+    <div class="section-heading">
+      <div>
+        <p class="step">Step 1</p>
+        <h2 id="generator-title">Write an expression</h2>
+      </div>
+      <span class="limit">Up to 10 variables</span>
+    </div>
+
+    <form (submit)="generate(); $event.preventDefault()" novalidate>
+      <label for="expression">Boolean expression</label>
+      <div class="input-row" [class.has-error]="error()">
+        <input
+          id="expression"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          [formControl]="expression"
+          [attr.aria-invalid]="error() ? 'true' : 'false'"
+          [attr.aria-describedby]="
+            error() ? 'expression-error operator-help' : 'operator-help'
+          "
+          placeholder="For example: A * (B + C')"
+        />
+        <button class="primary-button" type="submit">Generate table</button>
+      </div>
+
+      <div id="expression-error" class="error-message" aria-live="polite">
+        @if (error()) {
+          <span aria-hidden="true">!</span> {{ error() }}
+        }
+      </div>
+    </form>
+
+    <div id="operator-help" class="operators" aria-label="Supported operators">
+      <div><code>+</code><span>OR</span></div>
+      <div><code>*</code><span>AND</span></div>
+      <div><code>^</code><span>XOR</span></div>
+      <div><code>'</code><span>NOT (postfix)</span></div>
+      <div><code>( )</code><span>Group</span></div>
+    </div>
+
+    <div class="examples">
+      <span>Try an example:</span>
+      @for (example of examples; track example.expression) {
+        <button type="button" (click)="useExample(example.expression)">
+          <span>{{ example.label }}</span>
+          <code>{{ example.expression }}</code>
+        </button>
+      }
+    </div>
+  </section>
+
+  <aside class="card guide-card" aria-labelledby="guide-title">
+    <p class="step">Quick guide</p>
+    <h2 id="guide-title">How expressions work</h2>
+    <ol>
+      <li>
+        <span>1</span>
+        <p>
+          Use a single letter for each variable. Uppercase and lowercase letters
+          are distinct.
+        </p>
+      </li>
+      <li>
+        <span>2</span>
+        <p>
+          Put the apostrophe after what you want to negate: <code>A'</code> or
+          <code>(A+B)'</code>.
+        </p>
+      </li>
+      <li>
+        <span>3</span>
+        <p>
+          NOT is evaluated first, AND and XOR next, then OR. Parentheses
+          override that order.
+        </p>
+      </li>
+    </ol>
+  </aside>
+
+  @if (table(); as currentTable) {
+    <section class="card results-card" aria-labelledby="results-title">
+      <div class="results-heading">
+        <div>
+          <p class="step">Step 2</p>
+          <h2 id="results-title">Truth table</h2>
+          <p class="result-summary">
+            <code>{{ currentTable.expression }}</code>
+            <span
+              >{{ currentTable.variables.length }}
+              {{
+                currentTable.variables.length === 1 ? "variable" : "variables"
+              }}</span
+            >
+            <span
+              >{{ currentTable.rows.length }}
+              {{ currentTable.rows.length === 1 ? "row" : "rows" }}</span
+            >
+          </p>
+        </div>
+        <div class="result-actions">
+          <button type="button" class="secondary-button" (click)="copyTable()">
+            Copy table
+          </button>
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="downloadCsv()"
+          >
+            Download CSV
+          </button>
+        </div>
+      </div>
+
+      <p class="sr-only" aria-live="polite">{{ copyStatus() }}</p>
+      @if (copyStatus()) {
+        <p class="action-status" aria-hidden="true">{{ copyStatus() }}</p>
+      }
+
+      <div class="table-wrap" tabindex="0" aria-label="Scrollable truth table">
+        <table>
+          <thead>
+            <tr>
+              @for (variable of currentTable.variables; track variable) {
+                <th scope="col">{{ variable }}</th>
+              }
+              <th scope="col" class="result-column">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of currentTable.rows; track $index) {
+              <tr>
+                @for (value of row.values; track $index) {
+                  <td>
+                    <span [class.is-true]="value">{{ value ? 1 : 0 }}</span>
+                  </td>
+                }
+                <td class="result-column">
+                  <span [class.is-true]="row.result">{{
+                    row.result ? 1 : 0
+                  }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>
+
+<footer class="container footer">
+  <p>
+    Built as an interactive companion to the original Python and C++ generators.
+  </p>
+</footer>
